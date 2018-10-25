@@ -14,3 +14,7 @@ services:
     EzSystems\EzPlatformAdminUi\Validator\Constraints\LocationIsWithinCopySubtreeLimitValidator:
         arguments:
             $copySubtreeLimit: '$subtree_operations.copy_subtree.limit$'
+
+    EzSystems\EzPlatformAdminUi\Validator\Constraints\RichTextValidator:
+        tags:
+            - { name: validator.constraint_validator }
