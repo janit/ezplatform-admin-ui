@@ -75,10 +75,9 @@
         background-color: $ez-ground-base-pale;
         border: 1px solid $ez-ground-base-medium;
 
-        // On empty pre avoid broken styling, so insert a "<>" in grey color when empty
+        // On empty pre avoid broken styling, so insert a non-breaking whitespace to avoid that
         &:empty:after {
-            content: "\00a0\003c\003e";
-            color: $ez-color-base-pale;
+            content: "\00a0";
         }
     }
 }
