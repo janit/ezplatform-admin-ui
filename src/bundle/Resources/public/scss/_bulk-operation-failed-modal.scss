@@ -1,0 +1,48 @@
+.ez-bulk-operation-failed-modal {
+    cursor: auto;
+
+    .modal-dialog {
+        max-width: 60vw;
+    }
+
+    .modal-header {
+        background-color: $ez-color-base-pale;
+
+        .modal-title {
+            font-size: 1.5rem;
+
+            &::after {
+                content: attr(data-notifications-total);
+            }
+        }
+
+        .close {
+            margin-top: -0.5625rem;
+        }
+    }
+
+    .modal-body {
+        padding: 2rem;
+        background-color: $ez-ground-base-medium;
+        border-radius: 0 0 0.25rem 0.25rem;
+    }
+
+    .table {
+        margin-bottom: 0;
+
+        th {
+            border: none;
+            background-color: $ez-color-base-dark;
+            color: $ez-white;
+        }
+
+        tr {
+            background-color: $ez-white;
+
+            td {
+                padding: calculateRem(24px);
+                border-top: 1px solid $ez-color-base-dark;
+            }
+        }
+    }
+}

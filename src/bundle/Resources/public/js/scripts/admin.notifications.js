@@ -1,10 +1,11 @@
-(function (global, doc, eZ, $) {
+(function(global, doc, eZ, $) {
     const notificationsContainer = doc.querySelector('.ez-notifications-container');
     const notifications = JSON.parse(notificationsContainer.dataset.notifications);
     const template = notificationsContainer.dataset.template;
     const addNotification = ({ detail }) => {
         // @TODO: Unify 'error' and 'danger' label in 3.0.
         const configKey = detail.label === 'danger' ? 'error' : detail.label;
+        const callback = detail.callback;
         const config = eZ.adminUiConfig.notifications[configKey];
         const timeout = config ? config.timeout : 0;
         const container = doc.createElement('div');
@@ -19,10 +20,14 @@
         if (timeout) {
             global.setTimeout(() => $(notificationNode).alert('close'), timeout);
         }
+
+        if (callback && typeof callback === 'function') {
+            callback(notificationNode);
+        }
     };
 
-    Object.entries(notifications).forEach(([ label, messages ]) => {
-        messages.forEach(message => addNotification({ detail: { label, message }}));
+    Object.entries(notifications).forEach(([label, messages]) => {
+        messages.forEach((message) => addNotification({ detail: { label, message } }));
     });
 
     doc.body.addEventListener('ez-notify', addNotification, false);

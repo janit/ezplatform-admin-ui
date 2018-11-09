@@ -1,4 +1,5 @@
-(function (global, doc, $) {
+(function(global, doc, $) {
+    const SELECTOR_BULK_FAILED_MODAL = '#bulk-operation-failed-modal';
     const listContainers = [...doc.querySelectorAll('.ez-sil')];
     const mfuContainer = doc.querySelector('#ez-mfu');
     const token = doc.querySelector('meta[name="CSRF-Token"]').content;
@@ -9,13 +10,13 @@
     const mfuAttrs = {
         adminUiConfig: Object.assign({}, global.eZ.adminUiConfig, {
             token,
-            siteaccess
+            siteaccess,
         }),
         parentInfo: {
             contentTypeIdentifier: mfuContainer.dataset.parentContentTypeIdentifier,
             contentTypeId: parseInt(mfuContainer.dataset.parentContentTypeId, 10),
             locationPath: mfuContainer.dataset.parentLocationPath,
-            language: mfuContainer.dataset.parentContentLanguage
+            language: mfuContainer.dataset.parentContentLanguage,
         },
     };
     const handleEditItem = (content) => {
@@ -24,7 +25,8 @@
         const submitVersionEditForm = () => {
             doc.querySelector('#form_subitems_content_edit_content_info').value = contentId;
             doc.querySelector('#form_subitems_content_edit_version_info_content_info').value = contentId;
-            doc.querySelector('#form_subitems_content_edit_version_info_version_no').value = content.CurrentVersion.Version.VersionInfo.versionNo;
+            doc.querySelector('#form_subitems_content_edit_version_info_version_no').value =
+                content.CurrentVersion.Version.VersionInfo.versionNo;
             doc.querySelector(`#form_subitems_content_edit_language_${content.mainLanguageCode}`).checked = true;
             doc.querySelector('#form_subitems_content_edit_create').click();
         };
@@ -40,12 +42,14 @@
             if (addDraftButton) {
                 addDraftButton.addEventListener('click', addDraft, false);
             }
-            [...wrapper.querySelectorAll('.ez-btn--prevented')].forEach(btn => btn.addEventListener('click', event => event.preventDefault(), false));
+            [...wrapper.querySelectorAll('.ez-btn--prevented')].forEach((btn) =>
+                btn.addEventListener('click', (event) => event.preventDefault(), false)
+            );
             $('#version-draft-conflict-modal').modal('show');
         };
         fetch(checkVersionDraftLink, {
-            credentials: 'same-origin'
-        }).then(function (response) {
+            credentials: 'same-origin',
+        }).then(function(response) {
             // Status 409 means that a draft conflict has occurred and the modal must be displayed.
             // Otherwise we can go to Content Item edit page.
             if (response.status === 409) {
@@ -56,12 +60,59 @@
         });
     };
     const generateLink = (locationId) => window.Routing.generate('_ezpublishLocation', { locationId });
+    const bulkOperationFailedNotificationCallback = (notificationNode) => {
+        const openModalBtn = notificationNode.querySelector('.ez-notification-btn');
 
-    listContainers.forEach(container => {
+        openModalBtn.addEventListener('click', showBulkOperationFailedModal);
+    };
+    const updateModalTitle = (title) => {
+        const modalTitleNode = doc.querySelector(`${SELECTOR_BULK_FAILED_MODAL} .modal-header .modal-title`);
+
+        modalTitleNode.innerHTML = title;
+    };
+    const updateModalItems = (items) => {
+        const modal = doc.querySelector(SELECTOR_BULK_FAILED_MODAL);
+        const table = modal.querySelector('table');
+        const tableBody = table.querySelector('tbody');
+        const tableRowTemplate = table.dataset.tableRowTemplate;
+
+        const fragment = doc.createDocumentFragment();
+
+        items.forEach((item) => {
+            const container = doc.createElement('tbody');
+            const renderedItem = tableRowTemplate.replace('{{ content_name }}', item.name).replace('{{ content_type_name }}', item.contentTypeName);
+
+            container.insertAdjacentHTML('beforeend', renderedItem);
+
+            const tableRowNode = container.querySelector('tr');
+
+            fragment.append(tableRowNode);
+        });
+
+        removeNodeChildren(tableBody);
+        tableBody.append(fragment);
+    };
+    const removeNodeChildren = (node) => {
+        while (node.firstChild) {
+            node.removeChild(node.firstChild);
+        }
+    };
+    const showBulkOperationFailedModal = (event) => {
+        const btn = event.target;
+        const failedItems = JSON.parse(btn.dataset.failedItems);
+        const modalTitle = btn.dataset.modalTitle;
+
+        updateModalItems(failedItems);
+        updateModalTitle(modalTitle);
+
+        $(SELECTOR_BULK_FAILED_MODAL).modal('show');
+    };
+
+    listContainers.forEach((container) => {
         const subItemsList = JSON.parse(container.dataset.items).SubitemsList;
-        const items = subItemsList.SubitemsRow.map(item => ({
+        const items = subItemsList.SubitemsRow.map((item) => ({
             content: item.Content,
-            location: item.Location
+            location: item.Location,
         }));
         const contentTypes = JSON.parse(container.dataset.contentTypes).ContentTypeInfoList.ContentType;
         const contentTypesMap = contentTypes.reduce((total, item) => {
@@ -71,28 +122,34 @@
         }, {});
         const udwConfigBulkMoveItems = JSON.parse(container.dataset.udwConfigBulkMoveItems);
 
-        global.ReactDOM.render(global.React.createElement(global.eZ.modules.SubItems, {
-            handleEditItem,
-            generateLink,
-            parentLocationId: parseInt(container.dataset.location, 10),
-            sortClauses: {[sortField]: sortOrder},
-            restInfo: {token, siteaccess},
-            extraActions: [{
-                component: global.eZ.modules.MultiFileUpload,
-                attrs: Object.assign({}, mfuAttrs, {
-                    onPopupClose: (itemsUploaded) => {
-                        if (itemsUploaded.length) {
-                            window.location.reload(true);
-                        }
+        global.ReactDOM.render(
+            global.React.createElement(global.eZ.modules.SubItems, {
+                handleEditItem,
+                generateLink,
+                parentLocationId: parseInt(container.dataset.location, 10),
+                sortClauses: { [sortField]: sortOrder },
+                restInfo: { token, siteaccess },
+                extraActions: [
+                    {
+                        component: global.eZ.modules.MultiFileUpload,
+                        attrs: Object.assign({}, mfuAttrs, {
+                            onPopupClose: (itemsUploaded) => {
+                                if (itemsUploaded.length) {
+                                    window.location.reload(true);
+                                }
+                            },
+                            popupOnly: false,
+                            asButton: true,
+                        }),
                     },
-                    popupOnly: false,
-                    asButton: true
-                })
-            }],
-            items,
-            contentTypesMap,
-            totalCount: subItemsList.ChildrenCount,
-            udwConfigBulkMoveItems,
-        }), container);
+                ],
+                items,
+                contentTypesMap,
+                totalCount: subItemsList.ChildrenCount,
+                udwConfigBulkMoveItems,
+                bulkOperationFailedNotificationCallback,
+            }),
+            container
+        );
     });
 })(window, window.document, window.jQuery);
