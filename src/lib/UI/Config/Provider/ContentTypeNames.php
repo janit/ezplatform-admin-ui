@@ -9,6 +9,9 @@ namespace EzSystems\EzPlatformAdminUi\UI\Config\Provider;
 use eZ\Publish\API\Repository\ContentTypeService;
 use EzSystems\EzPlatformAdminUi\UI\Config\ProviderInterface;
 
+/**
+ * @deprecated Please move to use ContentTypes so we don't have to load the same data several times.
+ */
 class ContentTypeNames implements ProviderInterface
 {
     /** @var \eZ\Publish\API\Repository\ContentTypeService */

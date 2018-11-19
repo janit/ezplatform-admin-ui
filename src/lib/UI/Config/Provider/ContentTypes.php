@@ -27,7 +27,7 @@ class ContentTypes implements ProviderInterface
      */
     public function getConfig()
     {
-        $contentTypeGroups = [];
+        $contentTypeGroups = ['_types' => []];
 
         foreach ($this->contentTypeService->loadContentTypeGroups() as $contentTypeGroup) {
             foreach ($this->contentTypeService->loadContentTypes($contentTypeGroup) as $contentType) {
@@ -35,6 +35,7 @@ class ContentTypes implements ProviderInterface
                     'identifier' => $contentType->identifier,
                     'name' => $contentType->getName(),
                 ];
+                $contentTypeGroups['_types'][$contentType->identifier] = $contentType->getName();
             }
         }
 
