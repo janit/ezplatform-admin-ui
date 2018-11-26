@@ -78,10 +78,6 @@ services:
         tags:
             - {name: kernel.event_subscriber}
 
-    EzSystems\EzPlatformAdminUi\Form\Type\RichTextType:
-        arguments:
-            $docbook2xhtml5editConverter: '@ezpublish.fieldType.ezrichtext.converter.edit.xhtml5'
-
     EzSystems\EzPlatformAdminUi\UI\Dataset\DatasetFactory:
         arguments:
             $userContentTypeIdentifier: '$user_content_type_identifier$'
