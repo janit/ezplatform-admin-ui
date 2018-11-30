@@ -63,7 +63,7 @@ class RequestAttributesListener implements EventSubscriberInterface
         $parameterBag = $event->getParameters();
 
         if ($parameterBag->has('locationId') && $request->get('_route') === '_ezpublishLocation') {
-            $location = $this->loadLocation($parameterBag->get('locationId'), $parameterBag->get('languageCode'));
+            $location = $this->loadLocation($parameterBag->get('locationId'));
             $parameterBag->remove('locationId');
             $parameterBag->set('location', $location);
         }
@@ -72,7 +72,10 @@ class RequestAttributesListener implements EventSubscriberInterface
             /** @var Location $location */
             $location = $parameterBag->get('location');
 
-            $parameterBag->set('content', $location->getContent());
+            $languageCode = $parameterBag->get('languageCode') ?? $location->contentInfo->mainLanguageCode;
+
+            $content = $this->loadContent($location->contentInfo->id, $languageCode);
+            $parameterBag->set('content', $content);
         }
     }
 
@@ -92,11 +95,11 @@ class RequestAttributesListener implements EventSubscriberInterface
      *
      * @return Location
      */
-    private function loadLocation($locationId, ?string $languageCode): Location
+    private function loadLocation($locationId): Location
     {
         $location = $this->repository->sudo(
-            function (Repository $repository) use ($locationId, $languageCode) {
-                return $repository->getLocationService()->loadLocation($locationId, $languageCode ? [$languageCode] : null);
+            function (Repository $repository) use ($locationId) {
+                return $repository->getLocationService()->loadLocation($locationId);
             }
         );
 
